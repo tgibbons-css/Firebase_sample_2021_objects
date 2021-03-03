@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 public class ItemViewModel extends AndroidViewModel {
 
-    ArrayList<String> itemList;
+    ArrayList<Item> itemList;
 
     public ItemViewModel(@NonNull Application application) {
         super(application);
@@ -19,11 +19,11 @@ public class ItemViewModel extends AndroidViewModel {
     public void clearItems() {
         itemList.clear();
     }
-    public void addItem(String item) {
+    public void addItem(Item item) {
         itemList.add(item);
     }
 
-    public String getItem(Integer position) {
+    public Item getItem(Integer position) {
         return itemList.get(position);
     }
 

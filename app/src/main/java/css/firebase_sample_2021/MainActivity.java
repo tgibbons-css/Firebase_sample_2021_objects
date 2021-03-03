@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
         // setup firebase variables
         database = FirebaseDatabase.getInstance();
-        myRef = database.getReference("Item");
+        myRef = database.getReference("ITEM");
 
         editTextItem = findViewById(R.id.editTextItem);
         setupButtonPost();
@@ -63,15 +63,14 @@ public class MainActivity extends AppCompatActivity {
                 itemViewModel.clearItems();
                 // This method is called once with the initial value and again
                 // whenever data at this location is updated.
-                //String value = dataSnapshot.child("CIS3334_ITEMS").getValue(String.class);
-                //String value = dataSnapshot.getValue(String.class);
-                Map<String, Object> mapItems = (Map<String, Object>) dataSnapshot.getValue();
-                Log.d("CIS 3334", "ans is: " + mapItems);
-                for (Object item : mapItems.values()) {
-                    Log.d("CIS 3334", "Item is: " + item);
-                    itemViewModel.addItem(item.toString());
+
+                // Loop through the items, each is contained in its own DataSnapshot
+                for(DataSnapshot itemSnapshot : dataSnapshot.getChildren()){
+                    Item item = itemSnapshot.getValue(Item.class);
+                    Log.d("CIS 3334", "Item is: " + item.getItemDescription());
+                    itemViewModel.addItem(item);
                 }
-                //Log.d("CIS 3334", "Value is: " + value);
+
                 iItemRecycleViewAdapter.notifyDataSetChanged();
             }
 
@@ -90,13 +89,12 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // Write a message to the database
                 Log.d("CIS 3334", "Updating the firebase data");
-                String item = editTextItem.getText().toString();
+                String itemString = editTextItem.getText().toString();
                 //myRef.setValue("Hello, World!");
                 //myRef.setValue(item);
                 //myRef.child("CIS3334_ITEMS").push().setValue(item);
-                myRef.push().setValue(item);
-
-
+                Item newItem = new Item(itemString);
+                myRef.push().setValue(newItem);
 
             }
         });
