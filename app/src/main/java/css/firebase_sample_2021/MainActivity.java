@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
         // setup firebase variables
         database = FirebaseDatabase.getInstance();
-        myRef = database.getReference("ITEM");
+        myRef = database.getReference("ITEM_OBJECTS");
 
         editTextItem = findViewById(R.id.editTextItem);
         setupButtonPost();
