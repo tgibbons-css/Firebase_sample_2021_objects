@@ -1,6 +1,8 @@
 package css.firebase_sample_2021;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -10,28 +12,20 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
-import java.util.Map;
+import css.firebase_sample_2021.data_model.Item;
+import css.firebase_sample_2021.ui_views.RecycleViewAdapter;
 
 public class MainActivity extends AppCompatActivity {
 
     EditText editTextItem;
     Button buttonPost;
     RecyclerView recyclerViewItems;
-    ItemRecycleViewAdapter iItemRecycleViewAdapter;
-
-    ItemViewModel itemViewModel;
-
-    // variables for the Firebase database
-    FirebaseDatabase database;
-    DatabaseReference myRef;
+    RecycleViewAdapter iItemRecycleViewAdapter;
+    ViewModelItem viewModelItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,46 +35,27 @@ public class MainActivity extends AppCompatActivity {
         // Setup ViewModel
         // May need to add the following to the Module build.gradle file's dependencies section
         // implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-        itemViewModel = new ViewModelProvider(this).get(ItemViewModel.class);
-
-        // setup firebase variables
-        database = FirebaseDatabase.getInstance();
-        myRef = database.getReference("ITEM_OBJECTS");
+        viewModelItem = new ViewModelProvider(this).get(ViewModelItem.class);
 
         editTextItem = findViewById(R.id.editTextItem);
         setupButtonPost();
-        setupFirebaseUpdates();
         setupItemRecycleView();
-
+        setupViewModelObserver();
     }
 
-    private void setupFirebaseUpdates() {
-        // Read from the database
-        myRef.addValueEventListener(new ValueEventListener() {
+    private void setupViewModelObserver() {
+        // Create the observer which updates the UI.
+        final Observer<String> statusObserver = new Observer<String>() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d("CIS 3334", "onDataChange ");
-                itemViewModel.clearItems();
-                // This method is called once with the initial value and again
-                // whenever data at this location is updated.
-
-                // Loop through the items, each is contained in its own DataSnapshot
-                for(DataSnapshot itemSnapshot : dataSnapshot.getChildren()){
-                    Item item = itemSnapshot.getValue(Item.class);
-                    Log.d("CIS 3334", "Item is: " + item.getItemDescription());
-                    itemViewModel.addItem(item);
-                }
-
+            public void onChanged(@Nullable final String newStatus) {
+                // Update the UI, in this case, a TextView.
                 iItemRecycleViewAdapter.notifyDataSetChanged();
             }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                // Failed to read value
-                Log.d("CIS 3334", "Failed to read value.", error.toException());
-            }
-        });
+        };
+        // Observe the LiveData, passing in this activity as the LifecycleOwner and the observer.
+        viewModelItem.getNewItems().observe(this, statusObserver);
     }
+
 
     private void setupButtonPost() {
         buttonPost = findViewById(R.id.buttonPost);
@@ -90,19 +65,16 @@ public class MainActivity extends AppCompatActivity {
                 // Write a message to the database
                 Log.d("CIS 3334", "Updating the firebase data");
                 String itemString = editTextItem.getText().toString();
-                //myRef.setValue("Hello, World!");
-                //myRef.setValue(item);
-                //myRef.child("CIS3334_ITEMS").push().setValue(item);
                 Item newItem = new Item(itemString);
-                myRef.push().setValue(newItem);
-
+                viewModelItem.addItemToFirebase(newItem);
+                //myRef.push().setValue(newItem);
             }
         });
     }
 
     private void setupItemRecycleView() {
         recyclerViewItems = (RecyclerView) findViewById(R.id.recycleViewItems);
-        iItemRecycleViewAdapter = new ItemRecycleViewAdapter(itemViewModel);
+        iItemRecycleViewAdapter = new RecycleViewAdapter(viewModelItem);
         recyclerViewItems.setAdapter(iItemRecycleViewAdapter);
         recyclerViewItems.setLayoutManager(new LinearLayoutManager(this));
     }
