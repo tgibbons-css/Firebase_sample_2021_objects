@@ -1,8 +1,5 @@
 package css.firebase_sample_2021.data_model;
 
-import java.sql.Date;
-
-
 public class Item {
     String itemDescription;
     String itemUser;
